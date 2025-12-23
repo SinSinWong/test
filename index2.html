@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML5 貪食蛇遊戲</title>
+    <title>HTML5 貪食蛇遊戲 2.0</title>
     <style>
         * {
             margin: 0;
@@ -43,6 +43,18 @@
             color: #4CAF50;
             text-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
             letter-spacing: 2px;
+        }
+        
+        .version-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #FF9800, #FF5722);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-left: 10px;
+            font-weight: bold;
+            vertical-align: middle;
         }
         
         .subtitle {
@@ -98,6 +110,12 @@
             font-weight: bold;
             color: #4CAF50;
             text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+        }
+        
+        .high-score {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .controls {
@@ -163,6 +181,18 @@
             box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
         }
         
+        #restartBtn {
+            background-color: #2196F3;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        #restartBtn:hover {
+            background-color: #0b7dda;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+        }
+        
         .instructions {
             background: rgba(30, 30, 46, 0.8);
             border-radius: 10px;
@@ -194,6 +224,11 @@
             font-weight: bold;
         }
         
+        .orange {
+            color: #FF9800;
+            font-weight: bold;
+        }
+        
         .game-over {
             position: absolute;
             top: 0;
@@ -201,12 +236,11 @@
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.85);
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
-            display: none;
         }
         
         .game-over h2 {
@@ -218,8 +252,35 @@
         
         .game-over p {
             font-size: 1.5rem;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
             color: #fff;
+        }
+        
+        .game-over .score-display {
+            font-size: 2.2rem;
+            margin: 10px 0;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .game-over .highscore-display {
+            font-size: 1.8rem;
+            margin: 10px 0 20px 0;
+            color: #FF9800;
+        }
+        
+        @keyframes newRecordPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .new-record {
+            color: #FFD700;
+            font-size: 1.8rem;
+            margin: 15px 0;
+            text-align: center;
+            animation: newRecordPulse 0.5s ease-in-out infinite;
         }
         
         @media (max-width: 768px) {
@@ -241,7 +302,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>貪食蛇遊戲</h1>
+            <h1>貪食蛇遊戲 <span class="version-badge">2.0版</span></h1>
             <p class="subtitle">控制蛇吃掉紅色蘋果，每吃一個蘋果蛇會變長，不要撞到牆壁或自己！</p>
         </header>
         
@@ -250,7 +311,13 @@
                 <canvas id="gameCanvas" width="600" height="450"></canvas>
                 <div id="gameOver" class="game-over">
                     <h2>遊戲結束！</h2>
-                    <p>得分: <span id="finalScore">0</span></p>
+                    <p>本次得分</p>
+                    <div class="score-display" id="finalScore">0</div>
+                    <p>最高紀錄</p>
+                    <div class="highscore-display" id="finalHighScore">0</div>
+                    <div id="newRecord" class="new-record" style="display: none;">
+                        🎉 恭喜打破紀錄！ 🎉
+                    </div>
                     <button id="restartBtn">重新開始</button>
                 </div>
             </div>
@@ -259,6 +326,11 @@
                 <div class="score-container">
                     <div class="score-title">當前分數</div>
                     <div class="score" id="score">0</div>
+                    
+                    <div class="high-score">
+                        <div class="score-title">最高分紀錄</div>
+                        <div class="score" id="highScore" style="color: #FF9800;">0</div>
+                    </div>
                 </div>
                 
                 <div class="controls">
@@ -277,6 +349,7 @@
                         <div>
                             <span class="key">→</span> 向右
                         </div>
+                        <p style="margin-top: 10px;"><span class="key">空格鍵</span> 暫停/繼續遊戲</p>
                     </div>
                     
                     <div class="game-buttons">
@@ -293,6 +366,7 @@
             <p>2. 吃到<span class="red">紅色蘋果</span>可以增加分數並讓蛇身變長</p>
             <p>3. 蛇撞到牆壁或自己的身體遊戲結束</p>
             <p>4. 每吃一個蘋果得<span class="highlight">10分</span></p>
+            <p>5. 遊戲會自動保存<span class="orange">最高分紀錄</span></p>
         </div>
     </div>
 
@@ -312,16 +386,20 @@
         let nextDirection = 'right';
         let gameSpeed = 120; // 毫秒
         let score = 0;
+        let highScore = 0;
         let gameRunning = false;
         let gameLoop;
         
         // DOM元素
         const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
         const startBtn = document.getElementById('startBtn');
         const resetBtn = document.getElementById('resetBtn');
         const restartBtn = document.getElementById('restartBtn');
         const gameOverScreen = document.getElementById('gameOver');
         const finalScoreElement = document.getElementById('finalScore');
+        const finalHighScoreElement = document.getElementById('finalHighScore');
+        const newRecordElement = document.getElementById('newRecord');
         
         // 初始化遊戲
         function initGame() {
@@ -341,27 +419,66 @@
             scoreElement.textContent = score;
             gameSpeed = 120;
             
+            // 載入最高分紀錄
+            loadHighScore();
+            
             // 隱藏遊戲結束畫面
             gameOverScreen.style.display = 'none';
+            newRecordElement.style.display = 'none';
             
             // 繪製初始遊戲狀態
             draw();
         }
         
+        // 載入最高分紀錄
+        function loadHighScore() {
+            const savedHighScore = localStorage.getItem('snakeHighScore');
+            if (savedHighScore) {
+                highScore = parseInt(savedHighScore);
+                highScoreElement.textContent = highScore;
+                finalHighScoreElement.textContent = highScore;
+            } else {
+                highScore = 0;
+                highScoreElement.textContent = '0';
+                finalHighScoreElement.textContent = '0';
+            }
+        }
+        
+        // 保存最高分紀錄
+        function saveHighScore(newScore) {
+            if (newScore > highScore) {
+                highScore = newScore;
+                localStorage.setItem('snakeHighScore', highScore.toString());
+                highScoreElement.textContent = highScore;
+                finalHighScoreElement.textContent = highScore;
+                return true; // 返回true表示打破了紀錄
+            }
+            return false; // 返回false表示沒有打破紀錄
+        }
+        
         // 生成食物
         function generateFood() {
             // 創建隨機位置
-            food = {
-                x: Math.floor(Math.random() * gridWidth),
-                y: Math.floor(Math.random() * gridHeight)
-            };
+            let newFood;
+            let foodOnSnake;
             
-            // 確保食物不會出現在蛇身上
-            for (let segment of snake) {
-                if (segment.x === food.x && segment.y === food.y) {
-                    return generateFood();
+            do {
+                foodOnSnake = false;
+                newFood = {
+                    x: Math.floor(Math.random() * gridWidth),
+                    y: Math.floor(Math.random() * gridHeight)
+                };
+                
+                // 確保食物不會出現在蛇身上
+                for (let segment of snake) {
+                    if (segment.x === newFood.x && segment.y === newFood.y) {
+                        foodOnSnake = true;
+                        break;
+                    }
                 }
-            }
+            } while (foodOnSnake);
+            
+            food = newFood;
         }
         
         // 繪製遊戲
@@ -474,8 +591,8 @@
             }
             
             // 檢查是否撞到自己
-            for (let segment of snake) {
-                if (head.x === segment.x && head.y === segment.y) {
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
                     gameOver();
                     return;
                 }
@@ -493,6 +610,11 @@
                 // 每得50分增加速度
                 if (score % 50 === 0 && gameSpeed > 50) {
                     gameSpeed -= 10;
+                    // 更新遊戲速度
+                    if (gameRunning) {
+                        clearInterval(gameLoop);
+                        gameLoop = setInterval(update, gameSpeed);
+                    }
                 }
                 
                 // 生成新食物
@@ -511,14 +633,35 @@
             gameRunning = false;
             clearInterval(gameLoop);
             
-            // 顯示遊戲結束畫面
+            // 檢查是否打破紀錄
+            const isNewRecord = saveHighScore(score);
+            
+            // 更新遊戲結束畫面
             finalScoreElement.textContent = score;
+            finalHighScoreElement.textContent = highScore;
+            
+            // 顯示/隱藏新紀錄訊息
+            if (isNewRecord) {
+                newRecordElement.style.display = 'block';
+            }
+            
+            // 顯示遊戲結束畫面
             gameOverScreen.style.display = 'flex';
+            
+            // 更新按鈕狀態
+            startBtn.textContent = '開始遊戲';
+            startBtn.disabled = false;
+            startBtn.style.backgroundColor = '#4CAF50';
         }
         
         // 開始遊戲循環
         function startGame() {
             if (gameRunning) return;
+            
+            // 如果遊戲還沒開始，確保蛇已經初始化
+            if (snake.length === 0) {
+                initGame();
+            }
             
             gameRunning = true;
             gameLoop = setInterval(update, gameSpeed);
@@ -530,11 +673,11 @@
         // 重置遊戲
         function resetGame() {
             clearInterval(gameLoop);
-            initGame();
             gameRunning = false;
             startBtn.textContent = '開始遊戲';
             startBtn.disabled = false;
             startBtn.style.backgroundColor = '#4CAF50';
+            initGame();
         }
         
         // 鍵盤控制
@@ -565,7 +708,7 @@
                         startBtn.textContent = '繼續遊戲';
                         startBtn.disabled = false;
                         startBtn.style.backgroundColor = '#4CAF50';
-                    } else if (score > 0) {
+                    } else {
                         startGame();
                     }
                     break;
