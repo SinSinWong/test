@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>恐龍跑酷 - Google恐龍遊戲</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+        
+        body {
+            background-color: #f7f7f7;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0 #ccc;
+            position: relative;
+        }
+        
+        h1:after {
+            content: "🦖";
+            position: absolute;
+            right: -40px;
+            top: 0;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        #gameCanvas {
+            display: block;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 5px solid #333;
+            width: 100%;
+            height: 300px;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 25px;
+            z-index: 10;
+        }
+        
+        .score-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #333;
+        }
+        
+        .score-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        #score {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            text-shadow: 1px 1px 0 #ccc;
+        }
+        
+        .best-score {
+            color: #e74c3c;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .game-state {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border: 2px solid #333;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 25px;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .control-info {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            width: 100%;
+            border: 3px solid #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .control-info p {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        
+        .key {
+            display: inline-block;
+            background: #333;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            margin: 0 5px;
+            font-family: monospace;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        button {
+            flex: 1;
+            background: #333;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            letter-spacing: 1px;
+            border: 3px solid #333;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        #restart {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+        
+        #soundToggle {
+            background: #3498db;
+            border-color: #2980b9;
+        }
+        
+        #toggleTheme {
+            background: #2ecc71;
+            border-color: #27ae60;
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+            width: 100%;
+            max-width: 500px;
+            border: 3px solid #333;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instructions h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+            text-decoration: underline;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            color: #333;
+            line-height: 1.8;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+        }
+        
+        .instructions .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px 50px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            border: 5px solid #333;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        
+        .game-over h2 {
+            color: #e74c3c;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 0 #ccc;
+        }
+        
+        .game-over p {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .final-score {
+            font-size: 2.5rem;
+            color: #333;
+            font-weight: bold;
+            margin: 20px 0;
+            text-shadow: 1px 1px 0 #ccc;
+        }
+        
+        .result {
+            font-size: 1.3rem;
+            color: #e74c3c;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+        
+        #playAgain {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: #333;
+        }
+        
+        .dino-status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 2px solid #333;
+            font-weight: bold;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .dino-status span {
+            font-size: 1.2rem;
+        }
+        
+        .speed-display {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px 15px;
+            border: 2px solid #333;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: #333;
+            z-index: 1;
+        }
+        
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            z-index: 0;
+        }
+        
+        footer {
+            margin-top: 30px;
+            color: #666;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        
+        .night-mode {
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            color: #fff;
+        }
+        
+        .night-mode .instructions,
+        .night-mode .control-info,
+        .night-mode .score-container,
+        .night-mode .game-state,
+        .night-mode .dino-status,
+        .night-mode .speed-display,
+        .night-mode .game-over {
+            background: rgba(30, 30, 40, 0.95);
+            color: #fff;
+            border-color: #555;
+        }
+        
+        .night-mode .instructions h3,
+        .night-mode .instructions li,
+        .night-mode .control-info p,
+        .night-mode #score,
+        .night-mode .game-state {
+            color: #fff;
+        }
+        
+        .night-mode .key {
+            background: #555;
+        }
+        
+        .night-mode h1 {
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+        }
+        
+        .night-mode .subtitle {
+            color: #aaa;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h1:after {
+                right: -35px;
+                font-size: 2rem;
+            }
+            
+            #gameCanvas {
+                height: 250px;
+            }
+            
+            .game-over {
+                padding: 30px;
+                width: 90%;
+            }
+            
+            .game-over h2 {
+                font-size: 2.5rem;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>恐龍跑酷</h1>
+            <p class="subtitle">像Google離線恐龍遊戲一樣奔跑和跳躍！</p>
+        </header>
+        
+        <div class="game-area">
+            <canvas id="gameCanvas" width="800" height="300"></canvas>
+            <div class="ground"></div>
+            
+            <div class="game-ui">
+                <div class="score-container">
+                    <div class="score-label">分數</div>
+                    <div id="score">0</div>
+                </div>
+                
+                <div class="game-state" id="gameState">準備中...</div>
+                
+                <div class="score-container">
+                    <div class="score-label">最高分數</div>
+                    <div class="best-score" id="bestScore">0</div>
+                </div>
+            </div>
+            
+            <div class="dino-status" id="dinoStatus">
+                <span>🦖</span>
+                <span id="dinoAction">準備奔跑</span>
+            </div>
+            
+            <div class="speed-display" id="speedDisplay">
+                速度: <span id="speedValue">1</span>x
+            </div>
+            
+            <!-- 雲朵將由JS生成 -->
+        </div>
+        
+        <div class="controls">
+            <div class="control-info">
+                <p>按下 <span class="key">空格鍵</span> 或 <span class="key">↑</span> 跳躍</p>
+                <p>按下 <span class="key">↓</span> 蹲下躲避障礙物</p>
+            </div>
+            
+            <div class="buttons">
+                <button id="restart">重新開始</button>
+                <button id="soundToggle">音效: 開</button>
+                <button id="toggleTheme">夜間模式</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>遊戲規則</h3>
+            <ul>
+                <li>控制恐龍避開仙人掌和飛鳥</li>
+                <li><span class="highlight">按空格鍵或上箭頭鍵跳躍</span>越過仙人掌</li>
+                <li><span class="highlight">按下箭頭鍵蹲下</span>躲避飛鳥</li>
+                <li>遊戲速度會隨著分數增加而加快</li>
+                <li>每得100分，遊戲速度增加一次</li>
+                <li>撞到任何障礙物遊戲結束</li>
+                <li>目標：獲得盡可能高的分數！</li>
+            </ul>
+        </div>
+        
+        <footer>
+            <p>HTML5 恐龍跑酷遊戲 &copy; 2023 | 類似Google離線恐龍遊戲</p>
+        </footer>
+    </div>
+
+    <!-- 遊戲結束畫面 -->
+    <div class="game-over" id="gameOverScreen">
+        <h2>遊戲結束</h2>
+        <p>你的分數</p>
+        <div class="final-score" id="finalScore">0</div>
+        <div class="result" id="resultMessage">繼續努力！</div>
+        <button id="playAgain">再玩一次</button>
+    </div>
+
+    <script>
+        // 遊戲變數
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const bestScoreElement = document.getElementById('bestScore');
+        const gameStateElement = document.getElementById('gameState');
+        const dinoStatusElement = document.getElementById('dinoStatus');
+        const dinoActionElement = document.getElementById('dinoAction');
+        const speedDisplay = document.getElementById('speedDisplay');
+        const speedValueElement = document.getElementById('speedValue');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreElement = document.getElementById('finalScore');
+        const resultMessageElement = document.getElementById('resultMessage');
+        const restartButton = document.getElementById('restart');
+        const playAgainButton = document.getElementById('playAgain');
+        const soundToggleButton = document.getElementById('soundToggle');
+        const toggleThemeButton = document.getElementById('toggleTheme');
+        
+        // 遊戲參數
+        const GROUND_HEIGHT = 20;
+        const GRAVITY = 0.5;
+        const JUMP_FORCE = -12;
+        const INITIAL_SPEED = 5;
+        const SPEED_INCREASE_INTERVAL = 100; // 每100分增加速度
+        
+        // 遊戲狀態
+        let score = 0;
+        let bestScore = localStorage.getItem('dinoBestScore') || 0;
+        let gameOver = false;
+        let gameStarted = false;
+        let gameSpeed = INITIAL_SPEED;
+        let soundEnabled = true;
+        let nightMode = false;
+        
+        // 恐龍物件
+        let dino = {
+            x: 50,
+            y: canvas.height - GROUND_HEIGHT - 50,
+            width: 40,
+            height: 50,
+            velocityY: 0,
+            isJumping: false,
+            isDucking: false,
+            duckHeight: 25,
+            normalHeight: 50
+        };
+        
+        // 障礙物陣列
+        let obstacles = [];
+        let clouds = [];
+        
+        // 障礙物類型
+        const OBSTACLE_TYPES = [
+            { type: 'cactus', width: 20, height: 40, color: '#2ecc71' }, // 仙人掌
+            { type: 'cactus', width: 30, height: 50, color: '#27ae60' }, // 大仙人掌
+            { type: 'bird', width: 40, height: 25, color: '#e74c3c' }    // 飛鳥
+        ];
+        
+        // 初始化遊戲
+        function initGame() {
+            // 重置遊戲狀態
+            score = 0;
+            gameOver = false;
+            gameStarted = false;
+            gameSpeed = INITIAL_SPEED;
+            
+            // 重置恐龍
+            dino.y = canvas.height - GROUND_HEIGHT - dino.normalHeight;
+            dino.velocityY = 0;
+            dino.isJumping = false;
+            dino.isDucking = false;
+            dino.height = dino.normalHeight;
+            
+            // 清空障礙物
+            obstacles = [];
+            
+            // 創建雲朵
+            createClouds();
+            
+            // 更新UI
+            updateUI();
+            
+            // 隱藏遊戲結束畫面
+            gameOverScreen.style.display = 'none';
+            
+            // 更新遊戲狀態
+            gameStateElement.textContent = '按空格鍵開始';
+            dinoActionElement.textContent = '準備奔跑';
+            
+            // 繪製遊戲
+            draw();
+        }
+        
+        // 創建雲朵
+        function createClouds() {
+            clouds = [];
+            for (let i = 0; i < 5; i++) {
+                clouds.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * 100 + 20,
+                    width: Math.random() * 40 + 30,
+                    height: Math.random() * 20 + 15,
+                    speed: Math.random() * 0.5 + 0.5
+                });
+            }
+        }
+        
+        // 開始遊戲
+        function startGame() {
+            if (gameStarted) return;
+            
+            gameStarted = true;
+            gameStateElement.textContent = '遊戲中';
+            
+            // 開始遊戲循環
+            gameLoop();
+        }
+        
+        // 繪製遊戲
+        function draw() {
+            // 清除畫布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 繪製背景
+            drawBackground();
+            
+            // 繪製雲朵
+            drawClouds();
+            
+            // 繪製地面
+            drawGround();
+            
+            // 繪製障礙物
+            obstacles.forEach(obstacle => {
+                drawObstacle(obstacle);
+            });
+            
+            // 繪製恐龍
+            drawDino();
+            
+            // 繪製分數
+            drawScore();
+            
+            // 如果遊戲結束，繪製結束效果
+            if (gameOver) {
+                drawGameOverEffect();
+            }
+        }
+        
+        // 繪製背景
+        function drawBackground() {
+            if (nightMode) {
+                // 夜間模式背景
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 星星
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                for (let i = 0; i < 50; i++) {
+                    const x = (i * 17) % canvas.width;
+                    const y = (i * 23) % (canvas.height - 100);
+                    const size = Math.random() * 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                // 月亮
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(canvas.width - 50, 50, 20, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // 白天模式背景
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#E0F7FF');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 太陽
+                ctx.fillStyle = '#f1c40f';
+                ctx.beginPath();
+                ctx.arc(canvas.width - 50, 50, 25, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // 繪製雲朵
+        function drawClouds() {
+            clouds.forEach(cloud => {
+                ctx.fillStyle = nightMode ? 'rgba(200, 200, 220, 0.8)' : 'rgba(255, 255, 255, 0.9)';
+                
+                // 繪製雲朵的多個圓形組成
+                ctx.beginPath();
+                ctx.arc(cloud.x, cloud.y, cloud.width / 3, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width / 3, cloud.y - cloud.height / 4, cloud.width / 4, 0, Math.PI * 2);
+                ctx.arc(cloud.x - cloud.width / 3, cloud.y, cloud.width / 4, 0, Math.PI * 2);
+                ctx.arc(cloud.x + cloud.width / 4, cloud.y + cloud.height / 6, cloud.width / 5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // 繪製地面
+        function drawGround() {
+            // 地面主體
+            ctx.fillStyle = nightMode ? '#444' : '#333';
+            ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
+            
+            // 地面紋理
+            ctx.fillStyle = nightMode ? '#666' : '#555';
+            for (let i = 0; i < canvas.width; i += 20) {
+                ctx.fillRect(i, canvas.height - GROUND_HEIGHT, 10, 5);
+            }
+            
+            // 地面陰影
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, 3);
+        }
+        
+        // 繪製恐龍
+        function drawDino() {
+            // 恐龍身體
+            ctx.fillStyle = nightMode ? '#8e44ad' : '#2c3e50';
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            
+            // 恐龍眼睛
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(dino.x + dino.width - 10, dino.y + 10, 5, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(dino.x + dino.width - 10, dino.y + 10, 2, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 恐龍嘴巴
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(dino.x + dino.width - 5, dino.y + 15);
+            ctx.lineTo(dino.x + dino.width + 5, dino.y + 20);
+            ctx.stroke();
+            
+            // 恐龍尾巴
+            ctx.fillStyle = nightMode ? '#9b59b6' : '#34495e';
+            ctx.beginPath();
+            ctx.moveTo(dino.x, dino.y + dino.height - 10);
+            ctx.lineTo(dino.x - 15, dino.y + dino.height - 5);
+            ctx.lineTo(dino.x, dino.y + dino.height);
+            ctx.fill();
+            
+            // 恐龍腿部
+            const legY = dino.y + dino.height;
+            const legHeight = 15;
+            
+            // 左腿
+            ctx.fillStyle = nightMode ? '#8e44ad' : '#2c3e50';
+            ctx.fillRect(dino.x + 5, legY, 8, legHeight);
+            
+            // 右腿
+            ctx.fillRect(dino.x + dino.width - 13, legY, 8, legHeight);
+            
+            // 恐龍背部
+            if (!dino.isDucking) {
+                ctx.fillStyle = nightMode ? '#9b59b6' : '#34495e';
+                ctx.beginPath();
+                ctx.moveTo(dino.x + 10, dino.y);
+                ctx.lineTo(dino.x + 20, dino.y - 10);
+                ctx.lineTo(dino.x + dino.width - 10, dino.y - 10);
+                ctx.lineTo(dino.x + dino.width, dino.y);
+                ctx.fill();
+            }
+            
+            // 如果恐龍在跳躍，繪製跳躍效果
+            if (dino.isJumping) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.beginPath();
+                ctx.ellipse(dino.x + dino.width / 2, dino.y + dino.height + 5, 15, 5, 0, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // 繪製障礙物
+        function drawObstacle(obstacle) {
+            if (obstacle.type === 'cactus') {
+                // 繪製仙人掌
+                ctx.fillStyle = obstacle.color;
+                
+                // 仙人掌主幹
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                
+                // 仙人掌刺
+                ctx.fillStyle = nightMode ? '#27ae60' : '#2ecc71';
+                for (let i = 0; i < 3; i++) {
+                    const y = obstacle.y + 10 + i * 10;
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x, y);
+                    ctx.lineTo(obstacle.x - 8, y + 5);
+                    ctx.lineTo(obstacle.x, y);
+                    ctx.fill();
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x + obstacle.width, y);
+                    ctx.lineTo(obstacle.x + obstacle.width + 8, y + 5);
+                    ctx.lineTo(obstacle.x + obstacle.width, y);
+                    ctx.fill();
+                }
+                
+                // 仙人掌頂部
+                ctx.beginPath();
+                ctx.arc(obstacle.x + obstacle.width / 2, obstacle.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (obstacle.type === 'bird') {
+                // 繪製飛鳥
+                ctx.fillStyle = obstacle.color;
+                
+                // 鳥身體
+                ctx.beginPath();
+                ctx.ellipse(obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2, 
+                           obstacle.width / 2, obstacle.height / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 鳥翅膀
+                ctx.fillStyle = nightMode ? '#c0392b' : '#e74c3c';
+                const wingY = obstacle.y + obstacle.height / 2;
+                const wingOffset = Math.sin(Date.now() / 200) * 5; // 翅膀拍動效果
+                
+                // 左翅膀
+                ctx.beginPath();
+                ctx.moveTo(obstacle.x + obstacle.width / 2, wingY);
+                ctx.lineTo(obstacle.x + obstacle.width / 2 - 10, wingY - 10 + wingOffset);
+                ctx.lineTo(obstacle.x + obstacle.width / 2 - 5, wingY);
+                ctx.fill();
+                
+                // 右翅膀
+                ctx.beginPath();
+                ctx.moveTo(obstacle.x + obstacle.width / 2, wingY);
+                ctx.lineTo(obstacle.x + obstacle.width / 2 + 10, wingY - 10 - wingOffset);
+                ctx.lineTo(obstacle.x + obstacle.width / 2 + 5, wingY);
+                ctx.fill();
+                
+                // 鳥嘴
+                ctx.fillStyle = '#f39c12';
+                ctx.beginPath();
+                ctx.moveTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height / 2);
+                ctx.lineTo(obstacle.x + obstacle.width + 8, obstacle.y + obstacle.height / 2 - 3);
+                ctx.lineTo(obstacle.x + obstacle.width + 8, obstacle.y + obstacle.height / 2 + 3);
+                ctx.fill();
+                
+                // 鳥眼睛
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(obstacle.x + obstacle.width - 5, obstacle.y + obstacle.height / 2 - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(obstacle.x + obstacle.width - 5, obstacle.y + obstacle.height / 2 - 2, 1, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        // 繪製分數
+        function drawScore() {
+            ctx.fillStyle = nightMode ? '#fff' : '#333';
+            ctx.font = 'bold 24px Courier New';
+            ctx.textAlign = 'right';
+            ctx.fillText(`分數: ${score}`, canvas.width - 20, 40);
+            
+            ctx.font = 'bold 18px Courier New';
+            ctx.fillText(`速度: ${gameSpeed.toFixed(1)}x`, canvas.width - 20, 70);
+        }
+        
+        // 繪製遊戲結束效果
+        function drawGameOverEffect() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = nightMode ? '#fff' : '#333';
+            ctx.font = 'bold 40px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('遊戲結束', canvas.width / 2, canvas.height / 2 - 40);
+            
+            ctx.font = 'bold 30px Courier New';
+            ctx.fillText(`分數: ${score}`, canvas.width / 2, canvas.height / 2 + 10);
+            
+            if (score > bestScore) {
+                ctx.fillStyle = '#e74c3c';
+                ctx.font = 'bold 24px Courier New';
+                ctx.fillText('新紀錄！', canvas.width / 2, canvas.height / 2 + 50);
+            }
+        }
+        
+        // 更新遊戲
+        function update() {
+            if (!gameStarted || gameOver) return;
+            
+            // 更新分數
+            score++;
+            
+            // 每100分增加速度
+            if (score % SPEED_INCREASE_INTERVAL === 0) {
+                gameSpeed += 0.5;
+                if (soundEnabled) playSound('speedup');
+            }
+            
+            // 更新恐龍
+            updateDino();
+            
+            // 更新雲朵
+            updateClouds();
+            
+            // 更新障礙物
+            updateObstacles();
+            
+            // 檢查碰撞
+            checkCollisions();
+            
+            // 更新UI
+            updateUI();
+        }
+        
+        // 更新恐龍
+        function updateDino() {
+            // 應用重力
+            dino.velocityY += GRAVITY;
+            dino.y += dino.velocityY;
+            
+            // 確保恐龍不會掉到地面以下
+            const groundLevel = canvas.height - GROUND_HEIGHT - dino.height;
+            if (dino.y > groundLevel) {
+                dino.y = groundLevel;
+                dino.velocityY = 0;
+                dino.isJumping = false;
+                dinoActionElement.textContent = '奔跑中';
+            }
+            
+            // 更新蹲下狀態
+            if (dino.isDucking) {
+                dino.height = dino.duckHeight;
+                dinoActionElement.textContent = '蹲下中';
+            } else {
+                dino.height = dino.normalHeight;
+            }
+        }
+        
+        // 更新雲朵
+        function updateClouds() {
+            clouds.forEach(cloud => {
+                cloud.x -= cloud.speed;
+                
+                // 如果雲朵移出畫面，重置到右側
+                if (cloud.x + cloud.width < 0) {
+                    cloud.x = canvas.width;
+                    cloud.y = Math.random() * 100 + 20;
+                }
+            });
+        }
+        
+        // 更新障礙物
+        function updateObstacles() {
+            // 移動障礙物
+            obstacles.forEach(obstacle => {
+                obstacle.x -= gameSpeed;
+            });
+            
+            // 移除移出畫面的障礙物
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+            
+            // 隨機生成新障礙物
+            if (Math.random() < 0.02) { // 2% 機率每幀生成
+                generateObstacle();
+            }
+        }
+        
+        // 生成障礙物
+        function generateObstacle() {
+            const obstacleType = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
+            
+            let y;
+            if (obstacleType.type === 'bird') {
+                // 飛鳥在不同高度飛行
+                y = canvas.height - GROUND_HEIGHT - obstacleType.height - Math.random() * 100;
+            } else {
+                // 仙人掌在地面上
+                y = canvas.height - GROUND_HEIGHT - obstacleType.height;
+            }
+            
+            obstacles.push({
+                type: obstacleType.type,
+                x: canvas.width,
+                y: y,
+                width: obstacleType.width,
+                height: obstacleType.height,
+                color: obstacleType.color
+            });
+        }
+        
+        // 檢查碰撞
+        function checkCollisions() {
+            obstacles.forEach(obstacle => {
+                if (isColliding(dino, obstacle)) {
+                    gameOver = true;
+                    gameStateElement.textContent = '遊戲結束';
+                    
+                    // 更新最高分數
+                    if (score > bestScore) {
+                        bestScore = score;
+                        localStorage.setItem('dinoBestScore', bestScore);
+                    }
+                    
+                    // 播放遊戲結束音效
+                    if (soundEnabled) playSound('gameOver');
+                    
+                    // 顯示遊戲結束畫面
+                    showGameOver();
+                }
+            });
+        }
+        
+        // 檢查兩個矩形是否碰撞
+        function isColliding(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+        
+        // 跳躍
+        function jump() {
+            if (!gameStarted) {
+                startGame();
+                return;
+            }
+            
+            if (!dino.isJumping && !gameOver) {
+                dino.velocityY = JUMP_FORCE;
+                dino.isJumping = true;
+                dinoActionElement.textContent = '跳躍中';
+                
+                // 播放跳躍音效
+                if (soundEnabled) playSound('jump');
+            }
+        }
+        
+        // 蹲下
+        function duck() {
+            if (gameStarted && !gameOver) {
+                dino.isDucking = true;
+            }
+        }
+        
+        // 站起
+        function standUp() {
+            dino.isDucking = false;
+        }
+        
+        // 更新UI
+        function updateUI() {
+            scoreElement.textContent = score;
+            bestScoreElement.textContent = bestScore;
+            speedValueElement.textContent = gameSpeed.toFixed(1);
+        }
+        
+        // 顯示遊戲結束畫面
+        function showGameOver() {
+            finalScoreElement.textContent = score;
+            
+            // 設置結果訊息
+            if (score >= 500) {
+                resultMessageElement.textContent = '恐龍之王！太厲害了！';
+            } else if (score >= 200) {
+                resultMessageElement.textContent = '優秀的奔跑者！';
+            } else if (score >= 100) {
+                resultMessageElement.textContent = '不錯的成績！';
+            } else {
+                resultMessageElement.textContent = '繼續努力！';
+            }
+            
+            gameOverScreen.style.display = 'block';
+        }
+        
+        // 播放音效
+        function playSound(type) {
+            // 這裡使用簡單的音效模擬
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                switch (type) {
+                    case 'jump':
+                        oscillator.frequency.value = 300;
+                        gainNode.gain.value = 0.1;
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.1);
+                        break;
+                    case 'speedup':
+                        oscillator.frequency.value = 600;
+                        gainNode.gain.value = 0.2;
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.3);
+                        break;
+                    case 'gameOver':
+                        oscillator.frequency.value = 150;
+                        gainNode.gain.value = 0.2;
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                        break;
+                }
+            } catch (e) {
+                console.log('音效播放失敗:', e);
+            }
+        }
+        
+        // 切換夜間模式
+        function toggleNightMode() {
+            nightMode = !nightMode;
+            const body = document.body;
+            const button = document.getElementById('toggleTheme');
+            
+            if (nightMode) {
+                body.classList.add('night-mode');
+                button.textContent = '白天模式';
+            } else {
+                body.classList.remove('night-mode');
+                button.textContent = '夜間模式';
+            }
+            
+            // 重新繪製遊戲
+            draw();
+        }
+        
+        // 遊戲主循環
+        function gameLoop() {
+            update();
+            draw();
+            
+            if (!gameOver) {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+        
+        // 事件監聽器
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                e.preventDefault();
+                jump();
+            } else if (e.code === 'ArrowDown') {
+                e.preventDefault();
+                duck();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'ArrowDown') {
+                standUp();
+            }
+        });
+        
+        canvas.addEventListener('click', () => {
+            if (!gameStarted) {
+                startGame();
+            } else {
+                jump();
+            }
+        });
+        
+        restartButton.addEventListener('click', initGame);
+        playAgainButton.addEventListener('click', initGame);
+        
+        soundToggleButton.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundToggleButton.textContent = `音效: ${soundEnabled ? '開' : '關'}`;
+        });
+        
+        toggleThemeButton.addEventListener('click', toggleNightMode);
+        
+        // 初始化遊戲
+        initGame();
+    </script>
+</body>
+</html>
