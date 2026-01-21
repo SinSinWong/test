@@ -3,43 +3,426 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的遊戲館</title>
+    <title>SinSin Wong | 高級遊戲館</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #1a1a2e;
-            color: white;
-            text-align: center;
-            padding: 40px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        h1 { margin-bottom: 30px; }
-        .games { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 3.2em;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #b0b0d0;
+            letter-spacing: 3px;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }
+        
+        /* 分類標籤樣式 */
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .category-tab {
+            padding: 12px 30px;
+            background: rgba(30, 30, 46, 0.7);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        
+        .category-tab:hover {
+            background: rgba(40, 40, 62, 0.9);
+            transform: translateY(-2px);
+        }
+        
+        .category-tab.active {
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: #0f0c29;
+            font-weight: 600;
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.3);
+            border: none;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+        
+        /* 遊戲分類區域 */
+        .category-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .category-section.active {
+            display: block;
+        }
+        
+        .category-title {
+            font-size: 2em;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .category-icon {
+            font-size: 1.5em;
+        }
+        
+        .category-description {
+            text-align: center;
+            color: #a0a0c0;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        /* 遊戲卡片樣式 */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+        
         .game-card {
-            background: #2d2d44;
-            padding: 25px 35px;
-            border-radius: 10px;
+            background: rgba(30, 30, 46, 0.7);
+            padding: 35px 25px;
+            border-radius: 20px;
             text-decoration: none;
             color: white;
-            transition: 0.3s;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: block;
         }
-        .game-card:hover { background: #3d3d5c; transform: scale(1.05); }
-        .icon { font-size: 2em; }
+        
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--card-color-1, #ff7e5f), var(--card-color-2, #feb47b));
+        }
+        
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.03);
+            background: rgba(40, 40, 62, 0.9);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-icon {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.3));
+        }
+        
+        .game-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #f0f0f0;
+        }
+        
+        .game-description {
+            font-size: 0.95em;
+            color: #a0a0c0;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .game-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .game-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            color: #b0b0d0;
+        }
+        
+        .footer {
+            margin-top: 80px;
+            text-align: center;
+            color: #8888aa;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* 動畫效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 15px;
+            }
+            
+            h1 {
+                font-size: 2.5em;
+            }
+            
+            .category-title {
+                font-size: 1.6em;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .category-tabs {
+                gap: 10px;
+            }
+            
+            .category-tab {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>🎮 我的遊戲館</h1>
-    <div class="games">
-        <a href="game1.html" class="game-card">
-            <div class="icon">🎯</div>
-            <div>貪食蛇游戲</div>
-        </a>
-        <a href="game2.html" class="game-card">
-            <div class="icon">✊</div>
-            <div>block blast</div>
-        </a>
-        <a href="game3.html" class="game-card">
-            <div class="icon">✊</div>
-            <div>恐龍游戲</div>
+    <div class="container">
+        <div class="header">
+            <h1>SinSin Wong</h1>
+            <div class="subtitle">高級遊戲體驗館</div>
+            
+            <!-- 分類標籤 -->
+            <div class="category-tabs">
+                <div class="category-tab active" data-category="classic">
+                    經典遊戲 <span class="category-badge">2</span>
+                </div>
+                <div class="category-tab" data-category="puzzle">
+                    益智消除 <span class="category-badge">1</span>
+                </div>
+                <div class="category-tab" data-category="all">
+                    全部遊戲 <span class="category-badge">3</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 經典遊戲分類 -->
+        <div class="category-section active" id="classic-category">
+            <div class="category-title">
+                <span class="category-icon">🎮</span>
+                經典遊戲
+            </div>
+            <div class="category-description">
+                重溫經典遊戲，感受懷舊樂趣。這些遊戲經過時間考驗，依然充滿挑戰性。
+            </div>
+            
+            <div class="games-grid">
+                <a href="game1.html" class="game-card" style="--card-color-1: #4A90E2; --card-color-2: #7B68EE;">
+                    <div class="game-icon">🐍</div>
+                    <div class="game-title">貪食蛇游戲</div>
+                    <div class="game-description">
+                        控制小蛇吃掉食物，小心不要撞到牆壁或自己的身體！挑戰最長記錄。
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">經典</span>
+                        <span class="game-tag">休閒</span>
+                        <span class="game-tag">街機</span>
+                    </div>
+                </a>
+                
+                <a href="game3.html" class="game-card" style="--card-color-1: #FF6B6B; --card-color-2: #FF8E53;">
+                    <div class="game-icon">🦖</div>
+                    <div class="game-title">恐龍游戲</div>
+                    <div class="game-description">
+                        幫助恐龍跳過仙人掌和飛鳥，挑戰無盡模式，看看你能跑多遠！
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">動作</span>
+                        <span class="game-tag">無盡</span>
+                        <span class="game-tag">反應</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 益智消除分類 -->
+        <div class="category-section" id="puzzle-category">
+            <div class="category-title">
+                <span class="category-icon">🧩</span>
+                益智消除
+            </div>
+            <div class="category-description">
+                鍛鍊大腦，享受消除的快感。這些遊戲考驗你的策略和觀察力。
+            </div>
+            
+            <div class="games-grid">
+                <a href="game2.html" class="game-card" style="--card-color-1: #2ECC71; --card-color-2: #1ABC9C;">
+                    <div class="game-icon">🧱</div>
+                    <div class="game-title">Block Blast</div>
+                    <div class="game-description">
+                        消除相同顏色的方塊，創造連鎖反應，享受爆破的快感！
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">益智</span>
+                        <span class="game-tag">消除</span>
+                        <span class="game-tag">策略</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 全部遊戲分類 -->
+        <div class="category-section" id="all-category">
+            <div class="category-title">
+                <span class="category-icon">🌟</span>
+                全部遊戲
+            </div>
+            <div class="category-description">
+                探索 SinSin Wong 遊戲館的所有精彩遊戲，找到你最喜歡的那一款！
+            </div>
+            
+            <div class="games-grid">
+                <a href="game1.html" class="game-card" style="--card-color-1: #4A90E2; --card-color-2: #7B68EE;">
+                    <div class="game-icon">🐍</div>
+                    <div class="game-title">貪食蛇游戲</div>
+                    <div class="game-description">
+                        控制小蛇吃掉食物，小心不要撞到牆壁或自己的身體！挑戰最長記錄。
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">經典</span>
+                        <span class="game-tag">休閒</span>
+                        <span class="game-tag">街機</span>
+                    </div>
+                </a>
+                
+                <a href="game2.html" class="game-card" style="--card-color-1: #2ECC71; --card-color-2: #1ABC9C;">
+                    <div class="game-icon">🧱</div>
+                    <div class="game-title">Block Blast</div>
+                    <div class="game-description">
+                        消除相同顏色的方塊，創造連鎖反應，享受爆破的快感！
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">益智</span>
+                        <span class="game-tag">消除</span>
+                        <span class="game-tag">策略</span>
+                    </div>
+                </a>
+                
+                <a href="game3.html" class="game-card" style="--card-color-1: #FF6B6B; --card-color-2: #FF8E53;">
+                    <div class="game-icon">🦖</div>
+                    <div class="game-title">恐龍游戲</div>
+                    <div class="game-description">
+                        幫助恐龍跳過仙人掌和飛鳥，挑戰無盡模式，看看你能跑多遠！
+                    </div>
+                    <div class="game-tags">
+                        <span class="game-tag">動作</span>
+                        <span class="game-tag">無盡</span>
+                        <span class="game-tag">反應</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            © 2023 SinSin Wong 遊戲館 | 精心分類，優質遊戲體驗
+        </div>
     </div>
+
+    <script>
+        // 分類切換功能
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoryTabs = document.querySelectorAll('.category-tab');
+            const categorySections = document.querySelectorAll('.category-section');
+            
+            categoryTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有標籤的 active 類
+                    categoryTabs.forEach(t => t.classList.remove('active'));
+                    // 添加當前標籤的 active 類
+                    this.classList.add('active');
+                    
+                    // 獲取目標分類ID
+                    const categoryId = this.getAttribute('data-category');
+                    
+                    // 隱藏所有分類區域
+                    categorySections.forEach(section => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // 顯示目標分類區域
+                    document.getElementById(`${categoryId}-category`).classList.add('active');
+                });
+            });
+            
+            // 確保初始狀態正確
+            document.getElementById('classic-category').classList.add('active');
+        });
+    </script>
 </body>
 </html>
