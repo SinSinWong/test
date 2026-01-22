@@ -36,6 +36,11 @@
             text-align: center;
             margin-bottom: 20px;
             width: 100%;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started header {
+            opacity: 0;
         }
         
         h1 {
@@ -124,6 +129,11 @@
             border: 2px solid #333;
             font-weight: bold;
             color: #333;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started .game-state {
+            opacity: 0;
         }
         
         .controls {
@@ -133,6 +143,11 @@
             margin-top: 25px;
             width: 100%;
             max-width: 500px;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started .controls {
+            opacity: 0;
         }
         
         .control-info {
@@ -221,6 +236,11 @@
             max-width: 500px;
             border: 3px solid #333;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: opacity 0.3s;
+        }
+        
+        .game-started .instructions {
+            opacity: 0;
         }
         
         .instructions h3 {
@@ -309,6 +329,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started .dino-status {
+            opacity: 0;
         }
         
         .dino-status span {
@@ -325,6 +350,11 @@
             border: 2px solid #333;
             font-weight: bold;
             color: #333;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started .speed-display {
+            opacity: 0;
         }
         
         .ground {
@@ -349,6 +379,11 @@
             color: #666;
             text-align: center;
             font-size: 0.9rem;
+            transition: opacity 0.3s;
+        }
+        
+        .game-started footer {
+            opacity: 0;
         }
         
         .night-mode {
@@ -513,6 +548,7 @@
         const playAgainButton = document.getElementById('playAgain');
         const soundToggleButton = document.getElementById('soundToggle');
         const toggleThemeButton = document.getElementById('toggleTheme');
+        const container = document.querySelector('.container');
         
         // 遊戲參數
         const GROUND_HEIGHT = 20;
@@ -562,6 +598,9 @@
             gameStarted = false;
             gameSpeed = INITIAL_SPEED;
             
+            // 移除遊戲開始狀態類
+            container.classList.remove('game-started');
+            
             // 重置恐龍
             dino.y = canvas.height - GROUND_HEIGHT - dino.normalHeight;
             dino.velocityY = 0;
@@ -609,6 +648,9 @@
             
             gameStarted = true;
             gameStateElement.textContent = '遊戲中';
+            
+            // 添加遊戲開始狀態類
+            container.classList.add('game-started');
             
             // 開始遊戲循環
             gameLoop();
@@ -995,193 +1037,4 @@
                 height: obstacleType.height,
                 color: obstacleType.color
             });
-        }
-        
-        // 檢查碰撞
-        function checkCollisions() {
-            obstacles.forEach(obstacle => {
-                if (isColliding(dino, obstacle)) {
-                    gameOver = true;
-                    gameStateElement.textContent = '遊戲結束';
-                    
-                    // 更新最高分數
-                    if (score > bestScore) {
-                        bestScore = score;
-                        localStorage.setItem('dinoBestScore', bestScore);
-                    }
-                    
-                    // 播放遊戲結束音效
-                    if (soundEnabled) playSound('gameOver');
-                    
-                    // 顯示遊戲結束畫面
-                    showGameOver();
-                }
-            });
-        }
-        
-        // 檢查兩個矩形是否碰撞
-        function isColliding(rect1, rect2) {
-            return rect1.x < rect2.x + rect2.width &&
-                   rect1.x + rect1.width > rect2.x &&
-                   rect1.y < rect2.y + rect2.height &&
-                   rect1.y + rect1.height > rect2.y;
-        }
-        
-        // 跳躍
-        function jump() {
-            if (!gameStarted) {
-                startGame();
-                return;
-            }
-            
-            if (!dino.isJumping && !gameOver) {
-                dino.velocityY = JUMP_FORCE;
-                dino.isJumping = true;
-                dinoActionElement.textContent = '跳躍中';
-                
-                // 播放跳躍音效
-                if (soundEnabled) playSound('jump');
-            }
-        }
-        
-        // 蹲下
-        function duck() {
-            if (gameStarted && !gameOver) {
-                dino.isDucking = true;
-            }
-        }
-        
-        // 站起
-        function standUp() {
-            dino.isDucking = false;
-        }
-        
-        // 更新UI
-        function updateUI() {
-            scoreElement.textContent = score;
-            bestScoreElement.textContent = bestScore;
-            speedValueElement.textContent = gameSpeed.toFixed(1);
-        }
-        
-        // 顯示遊戲結束畫面
-        function showGameOver() {
-            finalScoreElement.textContent = score;
-            
-            // 設置結果訊息
-            if (score >= 500) {
-                resultMessageElement.textContent = '恐龍之王！太厲害了！';
-            } else if (score >= 200) {
-                resultMessageElement.textContent = '優秀的奔跑者！';
-            } else if (score >= 100) {
-                resultMessageElement.textContent = '不錯的成績！';
-            } else {
-                resultMessageElement.textContent = '繼續努力！';
-            }
-            
-            gameOverScreen.style.display = 'block';
-        }
-        
-        // 播放音效
-        function playSound(type) {
-            // 這裡使用簡單的音效模擬
-            try {
-                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioContext.createOscillator();
-                const gainNode = audioContext.createGain();
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioContext.destination);
-                
-                switch (type) {
-                    case 'jump':
-                        oscillator.frequency.value = 300;
-                        gainNode.gain.value = 0.1;
-                        oscillator.start();
-                        oscillator.stop(audioContext.currentTime + 0.1);
-                        break;
-                    case 'speedup':
-                        oscillator.frequency.value = 600;
-                        gainNode.gain.value = 0.2;
-                        oscillator.start();
-                        oscillator.stop(audioContext.currentTime + 0.3);
-                        break;
-                    case 'gameOver':
-                        oscillator.frequency.value = 150;
-                        gainNode.gain.value = 0.2;
-                        oscillator.start();
-                        oscillator.stop(audioContext.currentTime + 0.5);
-                        break;
-                }
-            } catch (e) {
-                console.log('音效播放失敗:', e);
-            }
-        }
-        
-        // 切換夜間模式
-        function toggleNightMode() {
-            nightMode = !nightMode;
-            const body = document.body;
-            const button = document.getElementById('toggleTheme');
-            
-            if (nightMode) {
-                body.classList.add('night-mode');
-                button.textContent = '白天模式';
-            } else {
-                body.classList.remove('night-mode');
-                button.textContent = '夜間模式';
-            }
-            
-            // 重新繪製遊戲
-            draw();
-        }
-        
-        // 遊戲主循環
-        function gameLoop() {
-            update();
-            draw();
-            
-            if (!gameOver) {
-                requestAnimationFrame(gameLoop);
-            }
-        }
-        
-        // 事件監聽器
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' || e.code === 'ArrowUp') {
-                e.preventDefault();
-                jump();
-            } else if (e.code === 'ArrowDown') {
-                e.preventDefault();
-                duck();
-            }
-        });
-        
-        document.addEventListener('keyup', (e) => {
-            if (e.code === 'ArrowDown') {
-                standUp();
-            }
-        });
-        
-        canvas.addEventListener('click', () => {
-            if (!gameStarted) {
-                startGame();
-            } else {
-                jump();
-            }
-        });
-        
-        restartButton.addEventListener('click', initGame);
-        playAgainButton.addEventListener('click', initGame);
-        
-        soundToggleButton.addEventListener('click', () => {
-            soundEnabled = !soundEnabled;
-            soundToggleButton.textContent = `音效: ${soundEnabled ? '開' : '關'}`;
-        });
-        
-        toggleThemeButton.addEventListener('click', toggleNightMode);
-        
-        // 初始化遊戲
-        initGame();
-    </script>
-</body>
-</html>
+       
