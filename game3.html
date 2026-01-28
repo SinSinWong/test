@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>恐龍跑酷 - Google恐龍遊戲</title>
     <style>
+        /* CSS部分保持不變 */
         * {
             margin: 0;
             padding: 0;
@@ -557,6 +558,11 @@
         const INITIAL_SPEED = 5;
         const SPEED_INCREASE_INTERVAL = 100; // 每100分增加速度
         
+        // 障礙物間距參數
+        const MIN_OBSTACLE_DISTANCE = 250; // 障礙物之間的最小距離（像素）
+        const MIN_OBSTACLE_INTERVAL = 1500; // 生成障礙物的最小時間間隔（毫秒）
+        let lastObstacleTime = 0;
+        
         // 遊戲狀態
         let score = 0;
         let bestScore = localStorage.getItem('dinoBestScore') || 0;
@@ -597,6 +603,9 @@
             gameOver = false;
             gameStarted = false;
             gameSpeed = INITIAL_SPEED;
+            
+            // 重置障礙物時間
+            lastObstacleTime = 0;
             
             // 移除遊戲開始狀態類
             container.classList.remove('game-started');
@@ -1011,13 +1020,36 @@
             obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
             
             // 隨機生成新障礙物
-            if (Math.random() < 0.02) { // 2% 機率每幀生成
+            // 隨著遊戲速度增加，生成障礙物的機率也增加
+            const baseProbability = 0.015; // 基礎機率 1.5%
+            const speedFactor = gameSpeed / INITIAL_SPEED;
+            const adjustedProbability = baseProbability * speedFactor;
+            
+            if (Math.random() < adjustedProbability) {
                 generateObstacle();
             }
         }
         
         // 生成障礙物
         function generateObstacle() {
+            const now = Date.now();
+            
+            // 檢查距離上次生成障礙物的時間間隔
+            if (now - lastObstacleTime < MIN_OBSTACLE_INTERVAL) {
+                return;
+            }
+            
+            // 檢查與最近障礙物的距離
+            if (obstacles.length > 0) {
+                const lastObstacle = obstacles[obstacles.length - 1];
+                const distanceToLastObstacle = canvas.width - lastObstacle.x;
+                
+                // 如果最近的障礙物距離太近，不生成新障礙物
+                if (distanceToLastObstacle < MIN_OBSTACLE_DISTANCE) {
+                    return;
+                }
+            }
+            
             const obstacleType = OBSTACLE_TYPES[Math.floor(Math.random() * OBSTACLE_TYPES.length)];
             
             let y;
@@ -1037,4 +1069,235 @@
                 height: obstacleType.height,
                 color: obstacleType.color
             });
+            
+            lastObstacleTime = now;
+        }
+        
+        // 恐龍跳躍
+        function jump() {
+            if (!gameStarted || gameOver || dino.isJumping) return;
+            
+            dino.velocityY = JUMP_FORCE;
+            dino.isJumping = true;
+            dino.isDucking = false;
+            dino.height = dino.normalHeight;
+            dinoActionElement.textContent = '跳躍中';
+            
+            // 播放音效
+            if (soundEnabled) {
+                playSound('jump');
+            }
+        }
+        
+        // 恐龍蹲下
+        function duck() {
+            if (!gameStarted || gameOver || dino.isJumping) return;
+            
+            dino.isDucking = true;
+            dinoActionElement.textContent = '蹲下中';
+        }
+        
+        // 停止蹲下
+        function stopDuck() {
+            dino.isDucking = false;
+            if (!dino.isJumping) {
+                dinoActionElement.textContent = '奔跑中';
+            }
+        }
+        
+        // 檢查碰撞
+        function checkCollisions() {
+            obstacles.forEach(obstacle => {
+                if (isColliding(dino, obstacle)) {
+                    gameOver = true;
+                    if (soundEnabled) playSound('crash');
+                    
+                    // 更新最高分數
+                    if (score > bestScore) {
+                        bestScore = score;
+                        localStorage.setItem('dinoBestScore', bestScore);
+                    }
+                    
+                    // 顯示遊戲結束畫面
+                    showGameOverScreen();
+                }
+            });
+        }
+        
+        // 碰撞檢測
+        function isColliding(rect1, rect2) {
+            return rect1.x < rect2.x + rect2.width &&
+                   rect1.x + rect1.width > rect2.x &&
+                   rect1.y < rect2.y + rect2.height &&
+                   rect1.y + rect1.height > rect2.y;
+        }
+        
+        // 更新UI
+        function updateUI() {
+            scoreElement.textContent = score;
+            bestScoreElement.textContent = bestScore;
+            speedValueElement.textContent = gameSpeed.toFixed(1);
+        }
+        
+        // 顯示遊戲結束畫面
+        function showGameOverScreen() {
+            finalScoreElement.textContent = score;
+            
+            // 根據分數顯示不同訊息
+            let message = "繼續努力！";
+            if (score >= 500) message = "太厲害了！你是恐龍大師！";
+            else if (score >= 300) message = "做得好！";
+            else if (score >= 100) message = "不錯的嘗試！";
+            
+            resultMessageElement.textContent = message;
+            gameOverScreen.style.display = 'block';
+        }
+        
+        // 播放音效
+        function playSound(soundType) {
+            // 這裡可以添加實際的音效
+            console.log(`播放音效: ${soundType}`);
+        }
+        
+        // 遊戲循環
+        function gameLoop() {
+            if (gameOver) return;
+            
+            update();
+            draw();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 事件監聽器
+        function setupEventListeners() {
+            // 鍵盤控制
+            document.addEventListener('keydown', (e) => {
+                switch(e.code) {
+                    case 'Space':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        if (!gameStarted) {
+                            startGame();
+                        } else if (!gameOver) {
+                            jump();
+                        }
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        if (gameStarted && !gameOver) {
+                            duck();
+                        }
+                        break;
+                    case 'Enter':
+                        if (gameOver) {
+                            initGame();
+                            startGame();
+                        }
+                        break;
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'ArrowDown') {
+                    stopDuck();
+                }
+            });
+            
+            // 按鈕事件
+            restartButton.addEventListener('click', () => {
+                initGame();
+                startGame();
+            });
+            
+            playAgainButton.addEventListener('click', () => {
+                initGame();
+                startGame();
+            });
+            
+            soundToggleButton.addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                soundToggleButton.textContent = `音效: ${soundEnabled ? '開' : '關'}`;
+            });
+            
+            toggleThemeButton.addEventListener('click', () => {
+                nightMode = !nightMode;
+                document.body.classList.toggle('night-mode', nightMode);
+                toggleThemeButton.textContent = nightMode ? '日間模式' : '夜間模式';
+            });
+            
+            // 觸摸控制（移動設備）
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!gameStarted) {
+                    startGame();
+                } else if (!gameOver) {
+                    jump();
+                }
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            });
+            
+            // 滑鼠點擊控制
+            canvas.addEventListener('click', () => {
+                if (!gameStarted) {
+                    startGame();
+                } else if (!gameOver) {
+                    jump();
+                }
+            });
+            
+            // 視窗大小調整
+            window.addEventListener('resize', () => {
+                // 調整畫布大小
+                const containerWidth = canvas.parentElement.clientWidth;
+                canvas.width = containerWidth;
+                canvas.height = 300;
+                
+                // 調整恐龍位置
+                dino.y = canvas.height - GROUND_HEIGHT - dino.height;
+                
+                // 重新繪製
+                draw();
+            });
+        }
+        
+        // 初始化
+        function init() {
+            initGame();
+            setupEventListeners();
+            
+            // 設置最佳分數
+            bestScoreElement.textContent = bestScore;
+            
+            // 調整初始畫布大小
+            const containerWidth = canvas.parentElement.clientWidth;
+            canvas.width = containerWidth;
+            canvas.height = 300;
+            
+            // 初始繪製
+            draw();
+        }
+        
+        // 當頁面加載完成時初始化遊戲
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // 添加一些初始動畫效果
+        setTimeout(() => {
+            dinoActionElement.textContent = '等待指令...';
+        }, 1000);
+        
+        // 添加恐龍動畫效果
+        setInterval(() => {
+            if (!gameStarted && !gameOver) {
+                // 讓恐龍有輕微的上下浮動效果
+                dino.y = canvas.height - GROUND_HEIGHT - dino.normalHeight + Math.sin(Date.now() / 500) * 3;
+                draw();
+            }
+        }, 50);
+    </script>
+</body>
+</html>
        
