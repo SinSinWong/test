@@ -87,11 +87,10 @@
         .game-ui {
             position: absolute;
             top: 20px;
-            left: 0;
+            left: 20px;
             right: 0;
             display: flex;
-            justify-content: space-between;
-            padding: 0 25px;
+            justify-content: flex-start;
             z-index: 10;
         }
         
@@ -101,6 +100,7 @@
             padding: 10px 20px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             border: 2px solid #333;
+            min-width: 120px;
         }
         
         .score-label {
@@ -131,6 +131,9 @@
             font-weight: bold;
             color: #333;
             transition: opacity 0.3s;
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
         }
         
         .game-started .game-state {
@@ -451,6 +454,11 @@
             .buttons {
                 flex-direction: column;
             }
+            
+            .game-ui {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -472,11 +480,6 @@
                 </div>
                 
                 <div class="game-state" id="gameState">準備中...</div>
-                
-                <div class="score-container">
-                    <div class="score-label">最高分數</div>
-                    <div class="best-score" id="bestScore">0</div>
-                </div>
             </div>
             
             <div class="dino-status" id="dinoStatus">
@@ -536,7 +539,6 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
-        const bestScoreElement = document.getElementById('bestScore');
         const gameStateElement = document.getElementById('gameState');
         const dinoStatusElement = document.getElementById('dinoStatus');
         const dinoActionElement = document.getElementById('dinoAction');
@@ -1135,7 +1137,6 @@
         // 更新UI
         function updateUI() {
             scoreElement.textContent = score;
-            bestScoreElement.textContent = bestScore;
             speedValueElement.textContent = gameSpeed.toFixed(1);
         }
         
@@ -1269,9 +1270,6 @@
             initGame();
             setupEventListeners();
             
-            // 設置最佳分數
-            bestScoreElement.textContent = bestScore;
-            
             // 調整初始畫布大小
             const containerWidth = canvas.parentElement.clientWidth;
             canvas.width = containerWidth;
@@ -1300,4 +1298,3 @@
     </script>
 </body>
 </html>
-       
