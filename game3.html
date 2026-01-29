@@ -689,9 +689,6 @@
             // 繪製恐龍
             drawDino();
             
-            // 繪製分數
-            drawScore();
-            
             // 如果遊戲結束，繪製結束效果
             if (gameOver) {
                 drawGameOverEffect();
@@ -913,15 +910,10 @@
             }
         }
         
-        // 繪製分數
+        // 繪製分數（已移除）
         function drawScore() {
-            ctx.fillStyle = nightMode ? '#fff' : '#333';
-            ctx.font = 'bold 24px Courier New';
-            ctx.textAlign = 'right';
-            ctx.fillText(`分數: ${score}`, canvas.width - 20, 40);
-            
-            ctx.font = 'bold 18px Courier New';
-            ctx.fillText(`速度: ${gameSpeed.toFixed(1)}x`, canvas.width - 20, 70);
+            // 不再在畫布上繪製分數和速度
+            // 分數現在顯示在HTML元素中
         }
         
         // 繪製遊戲結束效果
