@@ -349,7 +349,7 @@
                         <div>
                             <span class="key">→</span> 向右
                         </div>
-                        <p style="margin-top: 10px;"><span class="key">空格鍵</span> 暫停/繼續遊戲</p>
+                        <p style="margin-top: 10px;"><span class="key">Enter鍵</span> 暫停/繼續遊戲</p>
                     </div>
                     
                     <div class="game-buttons">
@@ -701,7 +701,7 @@
                 case 39: // 右箭頭
                     if (direction !== 'left') nextDirection = 'right';
                     break;
-                case 32: // 空格鍵 - 暫停/繼續
+                case 13: // 回車鍵 (Enter) - 暫停/繼續 (已修改)
                     if (gameRunning) {
                         clearInterval(gameLoop);
                         gameRunning = false;
