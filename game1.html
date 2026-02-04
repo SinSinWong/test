@@ -193,6 +193,73 @@
             box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
         }
         
+        /* 音效控制樣式 */
+        .sound-controls {
+            background: rgba(30, 30, 46, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .sound-controls label {
+            color: #aaa;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .sound-toggle {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sound-toggle.muted {
+            background: #f44336;
+        }
+        
+        .sound-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .volume-slider {
+            flex: 1;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+        }
+        
+        .volume-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #4CAF50;
+            cursor: pointer;
+            border: none;
+        }
+        
         .instructions {
             background: rgba(30, 30, 46, 0.8);
             border-radius: 10px;
@@ -356,6 +423,13 @@
                         <button id="startBtn">開始遊戲</button>
                         <button id="resetBtn">重新開始</button>
                     </div>
+                    
+                    <!-- 音效控制 -->
+                    <div class="sound-controls">
+                        <label for="volumeControl">音量:</label>
+                        <input type="range" id="volumeControl" class="volume-slider" min="0" max="100" value="50">
+                        <button id="soundToggle" class="sound-toggle">🔊</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -370,6 +444,9 @@
         </div>
     </div>
 
+    <!-- 引入增強版音效系統 -->
+    <script src="enhanced-sound.js"></script>
+    
     <script>
         // 獲取Canvas元素和上下文
         const canvas = document.getElementById('gameCanvas');
@@ -401,6 +478,10 @@
         const finalHighScoreElement = document.getElementById('finalHighScore');
         const newRecordElement = document.getElementById('newRecord');
         
+        // 音效控制元素
+        let soundControlBtn = null;
+        let volumeControl = null;
+        
         // 初始化遊戲
         function initGame() {
             // 初始化蛇 - 長度為5，從左邊開始
@@ -426,8 +507,68 @@
             gameOverScreen.style.display = 'none';
             newRecordElement.style.display = 'none';
             
+            // 初始化音效控制
+            initSoundControls();
+            
             // 繪製初始遊戲狀態
             draw();
+        }
+        
+        // 初始化音效控制
+        function initSoundControls() {
+            soundControlBtn = document.getElementById('soundToggle');
+            volumeControl = document.getElementById('volumeControl');
+            
+            if (!soundControlBtn || !volumeControl) return;
+            
+            // 載入音效設定
+            if (window.enhancedSoundManager) {
+                const settings = window.enhancedSoundManager.getSettings();
+                volumeControl.value = settings.volume * 100;
+                updateSoundToggleButton(settings.enabled);
+            }
+            
+            // 音量控制事件
+            volumeControl.addEventListener('input', function() {
+                const volume = this.value / 100;
+                if (window.enhancedSoundManager) {
+                    window.enhancedSoundManager.setMasterVolume(volume);
+                    // 播放測試音效
+                    window.enhancedSoundManager.playSound('move', 0.3);
+                }
+            });
+            
+            // 音效開關事件
+            soundControlBtn.addEventListener('click', function() {
+                if (window.enhancedSoundManager) {
+                    const enabled = window.enhancedSoundManager.toggleSound();
+                    updateSoundToggleButton(enabled);
+                    // 播放測試音效
+                    if (enabled) {
+                        window.enhancedSoundManager.playSound('score', 0.3);
+                    }
+                }
+            });
+        }
+        
+        // 更新音效開關按鈕
+        function updateSoundToggleButton(enabled) {
+            if (!soundControlBtn) return;
+            
+            if (enabled) {
+                soundControlBtn.textContent = '🔊';
+                soundControlBtn.classList.remove('muted');
+            } else {
+                soundControlBtn.textContent = '🔇';
+                soundControlBtn.classList.add('muted');
+            }
+        }
+        
+        // 播放音效
+        function playSound(soundName, volume = 1.0) {
+            if (window.enhancedSoundManager) {
+                window.enhancedSoundManager.playSound(soundName, volume);
+            }
         }
         
         // 載入最高分紀錄
@@ -586,6 +727,7 @@
             
             // 檢查是否撞牆
             if (head.x < 0 || head.x >= gridWidth || head.y < 0 || head.y >= gridHeight) {
+                playSound('snake_crash');
                 gameOver();
                 return;
             }
@@ -593,6 +735,7 @@
             // 檢查是否撞到自己
             for (let i = 1; i < snake.length; i++) {
                 if (head.x === snake[i].x && head.y === snake[i].y) {
+                    playSound('snake_crash');
                     gameOver();
                     return;
                 }
@@ -603,6 +746,9 @@
             
             // 檢查是否吃到食物
             if (head.x === food.x && head.y === food.y) {
+                // 播放吃食物音效
+                playSound('snake_eat');
+                
                 // 增加分數
                 score += 10;
                 scoreElement.textContent = score;
@@ -610,6 +756,8 @@
                 // 每得50分增加速度
                 if (score % 50 === 0 && gameSpeed > 50) {
                     gameSpeed -= 10;
+                    // 播放加速音效
+                    playSound('snake_speedup');
                     // 更新遊戲速度
                     if (gameRunning) {
                         clearInterval(gameLoop);
@@ -622,6 +770,10 @@
             } else {
                 // 如果沒吃到食物，移除蛇尾
                 snake.pop();
+                // 播放移動音效（頻率較低，避免太吵）
+                if (Math.random() < 0.3) {
+                    playSound('snake_move', 0.3);
+                }
             }
             
             // 繪製更新後的遊戲狀態
@@ -633,6 +785,9 @@
             gameRunning = false;
             clearInterval(gameLoop);
             
+            // 播放遊戲結束音效
+            playSound('gameOver');
+            
             // 檢查是否打破紀錄
             const isNewRecord = saveHighScore(score);
             
@@ -643,6 +798,8 @@
             // 顯示/隱藏新紀錄訊息
             if (isNewRecord) {
                 newRecordElement.style.display = 'block';
+                // 播放成就音效
+                playSound('achievement');
             }
             
             // 顯示遊戲結束畫面
@@ -657,6 +814,9 @@
         // 開始遊戲循環
         function startGame() {
             if (gameRunning) return;
+            
+            // 播放開始遊戲音效
+            playSound('move', 0.5);
             
             // 如果遊戲還沒開始，確保蛇已經初始化
             if (snake.length === 0) {
@@ -677,6 +837,8 @@
             startBtn.textContent = '開始遊戲';
             startBtn.disabled = false;
             startBtn.style.backgroundColor = '#4CAF50';
+            // 播放重置音效
+            playSound('move', 0.3);
             initGame();
         }
         
