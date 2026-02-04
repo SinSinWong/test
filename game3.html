@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>恐龍跑酷 - Google恐龍遊戲</title>
+    <!-- 引入增強版音效系統 -->
+    <script src="enhanced-sound.js"></script>
     <style>
-        /* CSS部分保持不變 */
+        /* CSS部分 */
         * {
             margin: 0;
             padding: 0;
@@ -490,8 +492,6 @@
             <div class="speed-display" id="speedDisplay">
                 速度: <span id="speedValue">1</span>x
             </div>
-            
-            <!-- 雲朵將由JS生成 -->
         </div>
         
         <div class="controls">
@@ -525,7 +525,6 @@
         </footer>
     </div>
 
-    <!-- 遊戲結束畫面 -->
     <div class="game-over" id="gameOverScreen">
         <h2>遊戲結束</h2>
         <p>你的分數</p>
@@ -558,11 +557,11 @@
         const GRAVITY = 0.5;
         const JUMP_FORCE = -12;
         const INITIAL_SPEED = 5;
-        const SPEED_INCREASE_INTERVAL = 100; // 每100分增加速度
+        const SPEED_INCREASE_INTERVAL = 100;
         
         // 障礙物間距參數
-        const MIN_OBSTACLE_DISTANCE = 250; // 障礙物之間的最小距離（像素）
-        const MIN_OBSTACLE_INTERVAL = 1500; // 生成障礙物的最小時間間隔（毫秒）
+        const MIN_OBSTACLE_DISTANCE = 250;
+        const MIN_OBSTACLE_INTERVAL = 1500;
         let lastObstacleTime = 0;
         
         // 遊戲狀態
@@ -593,49 +592,39 @@
         
         // 障礙物類型
         const OBSTACLE_TYPES = [
-            { type: 'cactus', width: 20, height: 40, color: '#2ecc71' }, // 仙人掌
-            { type: 'cactus', width: 30, height: 50, color: '#27ae60' }, // 大仙人掌
-            { type: 'bird', width: 40, height: 25, color: '#e74c3c' }    // 飛鳥
+            { type: 'cactus', width: 20, height: 40, color: '#2ecc71' },
+            { type: 'cactus', width: 30, height: 50, color: '#27ae60' },
+            { type: 'bird', width: 40, height: 25, color: '#e74c3c' }
         ];
         
         // 初始化遊戲
         function initGame() {
-            // 重置遊戲狀態
             score = 0;
             gameOver = false;
             gameStarted = false;
             gameSpeed = INITIAL_SPEED;
             
-            // 重置障礙物時間
             lastObstacleTime = 0;
             
-            // 移除遊戲開始狀態類
             container.classList.remove('game-started');
             
-            // 重置恐龍
             dino.y = canvas.height - GROUND_HEIGHT - dino.normalHeight;
             dino.velocityY = 0;
             dino.isJumping = false;
             dino.isDucking = false;
             dino.height = dino.normalHeight;
             
-            // 清空障礙物
             obstacles = [];
             
-            // 創建雲朵
             createClouds();
             
-            // 更新UI
             updateUI();
             
-            // 隱藏遊戲結束畫面
             gameOverScreen.style.display = 'none';
             
-            // 更新遊戲狀態
             gameStateElement.textContent = '按空格鍵開始';
             dinoActionElement.textContent = '準備奔跑';
             
-            // 繪製遊戲
             draw();
         }
         
@@ -660,36 +649,27 @@
             gameStarted = true;
             gameStateElement.textContent = '遊戲中';
             
-            // 添加遊戲開始狀態類
             container.classList.add('game-started');
             
-            // 開始遊戲循環
             gameLoop();
         }
         
         // 繪製遊戲
         function draw() {
-            // 清除畫布
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // 繪製背景
             drawBackground();
             
-            // 繪製雲朵
             drawClouds();
             
-            // 繪製地面
             drawGround();
             
-            // 繪製障礙物
             obstacles.forEach(obstacle => {
                 drawObstacle(obstacle);
             });
             
-            // 繪製恐龍
             drawDino();
             
-            // 如果遊戲結束，繪製結束效果
             if (gameOver) {
                 drawGameOverEffect();
             }
@@ -698,11 +678,9 @@
         // 繪製背景
         function drawBackground() {
             if (nightMode) {
-                // 夜間模式背景
                 ctx.fillStyle = '#1a1a2e';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // 星星
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
                 for (let i = 0; i < 50; i++) {
                     const x = (i * 17) % canvas.width;
@@ -713,20 +691,17 @@
                     ctx.fill();
                 }
                 
-                // 月亮
                 ctx.fillStyle = '#f1c40f';
                 ctx.beginPath();
                 ctx.arc(canvas.width - 50, 50, 20, 0, Math.PI * 2);
                 ctx.fill();
             } else {
-                // 白天模式背景
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, '#87CEEB');
                 gradient.addColorStop(1, '#E0F7FF');
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
-                // 太陽
                 ctx.fillStyle = '#f1c40f';
                 ctx.beginPath();
                 ctx.arc(canvas.width - 50, 50, 25, 0, Math.PI * 2);
@@ -739,7 +714,6 @@
             clouds.forEach(cloud => {
                 ctx.fillStyle = nightMode ? 'rgba(200, 200, 220, 0.8)' : 'rgba(255, 255, 255, 0.9)';
                 
-                // 繪製雲朵的多個圓形組成
                 ctx.beginPath();
                 ctx.arc(cloud.x, cloud.y, cloud.width / 3, 0, Math.PI * 2);
                 ctx.arc(cloud.x + cloud.width / 3, cloud.y - cloud.height / 4, cloud.width / 4, 0, Math.PI * 2);
@@ -751,17 +725,14 @@
         
         // 繪製地面
         function drawGround() {
-            // 地面主體
             ctx.fillStyle = nightMode ? '#444' : '#333';
             ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, GROUND_HEIGHT);
             
-            // 地面紋理
             ctx.fillStyle = nightMode ? '#666' : '#555';
             for (let i = 0; i < canvas.width; i += 20) {
                 ctx.fillRect(i, canvas.height - GROUND_HEIGHT, 10, 5);
             }
             
-            // 地面陰影
             ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
             ctx.fillRect(0, canvas.height - GROUND_HEIGHT, canvas.width, 3);
         }
@@ -821,7 +792,7 @@
                 ctx.fill();
             }
             
-            // 如果恐龍在跳躍，繪製跳躍效果
+            // 跳躍效果
             if (dino.isJumping) {
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
                 ctx.beginPath();
@@ -833,13 +804,10 @@
         // 繪製障礙物
         function drawObstacle(obstacle) {
             if (obstacle.type === 'cactus') {
-                // 繪製仙人掌
                 ctx.fillStyle = obstacle.color;
                 
-                // 仙人掌主幹
                 ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
                 
-                // 仙人掌刺
                 ctx.fillStyle = nightMode ? '#27ae60' : '#2ecc71';
                 for (let i = 0; i < 3; i++) {
                     const y = obstacle.y + 10 + i * 10;
@@ -856,40 +824,33 @@
                     ctx.fill();
                 }
                 
-                // 仙人掌頂部
                 ctx.beginPath();
                 ctx.arc(obstacle.x + obstacle.width / 2, obstacle.y, 5, 0, Math.PI * 2);
                 ctx.fill();
             } else if (obstacle.type === 'bird') {
-                // 繪製飛鳥
                 ctx.fillStyle = obstacle.color;
                 
-                // 鳥身體
                 ctx.beginPath();
                 ctx.ellipse(obstacle.x + obstacle.width / 2, obstacle.y + obstacle.height / 2, 
                            obstacle.width / 2, obstacle.height / 2, 0, 0, Math.PI * 2);
                 ctx.fill();
                 
-                // 鳥翅膀
                 ctx.fillStyle = nightMode ? '#c0392b' : '#e74c3c';
                 const wingY = obstacle.y + obstacle.height / 2;
-                const wingOffset = Math.sin(Date.now() / 200) * 5; // 翅膀拍動效果
+                const wingOffset = Math.sin(Date.now() / 200) * 5;
                 
-                // 左翅膀
                 ctx.beginPath();
                 ctx.moveTo(obstacle.x + obstacle.width / 2, wingY);
                 ctx.lineTo(obstacle.x + obstacle.width / 2 - 10, wingY - 10 + wingOffset);
                 ctx.lineTo(obstacle.x + obstacle.width / 2 - 5, wingY);
                 ctx.fill();
                 
-                // 右翅膀
                 ctx.beginPath();
                 ctx.moveTo(obstacle.x + obstacle.width / 2, wingY);
                 ctx.lineTo(obstacle.x + obstacle.width / 2 + 10, wingY - 10 - wingOffset);
                 ctx.lineTo(obstacle.x + obstacle.width / 2 + 5, wingY);
                 ctx.fill();
                 
-                // 鳥嘴
                 ctx.fillStyle = '#f39c12';
                 ctx.beginPath();
                 ctx.moveTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height / 2);
@@ -897,7 +858,6 @@
                 ctx.lineTo(obstacle.x + obstacle.width + 8, obstacle.y + obstacle.height / 2 + 3);
                 ctx.fill();
                 
-                // 鳥眼睛
                 ctx.fillStyle = '#fff';
                 ctx.beginPath();
                 ctx.arc(obstacle.x + obstacle.width - 5, obstacle.y + obstacle.height / 2 - 2, 3, 0, Math.PI * 2);
@@ -908,12 +868,6 @@
                 ctx.arc(obstacle.x + obstacle.width - 5, obstacle.y + obstacle.height / 2 - 2, 1, 0, Math.PI * 2);
                 ctx.fill();
             }
-        }
-        
-        // 繪製分數（已移除）
-        function drawScore() {
-            // 不再在畫布上繪製分數和速度
-            // 分數現在顯示在HTML元素中
         }
         
         // 繪製遊戲結束效果
@@ -941,38 +895,29 @@
         function update() {
             if (!gameStarted || gameOver) return;
             
-            // 更新分數
             score++;
             
-            // 每100分增加速度
             if (score % SPEED_INCREASE_INTERVAL === 0) {
                 gameSpeed += 0.5;
                 if (soundEnabled) playSound('speedup');
             }
             
-            // 更新恐龍
             updateDino();
             
-            // 更新雲朵
             updateClouds();
             
-            // 更新障礙物
             updateObstacles();
             
-            // 檢查碰撞
             checkCollisions();
             
-            // 更新UI
             updateUI();
         }
         
         // 更新恐龍
         function updateDino() {
-            // 應用重力
             dino.velocityY += GRAVITY;
             dino.y += dino.velocityY;
             
-            // 確保恐龍不會掉到地面以下
             const groundLevel = canvas.height - GROUND_HEIGHT - dino.height;
             if (dino.y > groundLevel) {
                 dino.y = groundLevel;
@@ -981,7 +926,6 @@
                 dinoActionElement.textContent = '奔跑中';
             }
             
-            // 更新蹲下狀態
             if (dino.isDucking) {
                 dino.height = dino.duckHeight;
                 dinoActionElement.textContent = '蹲下中';
@@ -995,7 +939,6 @@
             clouds.forEach(cloud => {
                 cloud.x -= cloud.speed;
                 
-                // 如果雲朵移出畫面，重置到右側
                 if (cloud.x + cloud.width < 0) {
                     cloud.x = canvas.width;
                     cloud.y = Math.random() * 100 + 20;
@@ -1005,17 +948,13 @@
         
         // 更新障礙物
         function updateObstacles() {
-            // 移動障礙物
             obstacles.forEach(obstacle => {
                 obstacle.x -= gameSpeed;
             });
             
-            // 移除移出畫面的障礙物
             obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
             
-            // 隨機生成新障礙物
-            // 隨著遊戲速度增加，生成障礙物的機率也增加
-            const baseProbability = 0.015; // 基礎機率 1.5%
+            const baseProbability = 0.015;
             const speedFactor = gameSpeed / INITIAL_SPEED;
             const adjustedProbability = baseProbability * speedFactor;
             
@@ -1028,17 +967,14 @@
         function generateObstacle() {
             const now = Date.now();
             
-            // 檢查距離上次生成障礙物的時間間隔
             if (now - lastObstacleTime < MIN_OBSTACLE_INTERVAL) {
                 return;
             }
             
-            // 檢查與最近障礙物的距離
             if (obstacles.length > 0) {
                 const lastObstacle = obstacles[obstacles.length - 1];
                 const distanceToLastObstacle = canvas.width - lastObstacle.x;
                 
-                // 如果最近的障礙物距離太近，不生成新障礙物
                 if (distanceToLastObstacle < MIN_OBSTACLE_DISTANCE) {
                     return;
                 }
@@ -1048,10 +984,8 @@
             
             let y;
             if (obstacleType.type === 'bird') {
-                // 飛鳥在不同高度飛行
                 y = canvas.height - GROUND_HEIGHT - obstacleType.height - Math.random() * 100;
             } else {
-                // 仙人掌在地面上
                 y = canvas.height - GROUND_HEIGHT - obstacleType.height;
             }
             
@@ -1077,7 +1011,6 @@
             dino.height = dino.normalHeight;
             dinoActionElement.textContent = '跳躍中';
             
-            // 播放音效
             if (soundEnabled) {
                 playSound('jump');
             }
@@ -1089,6 +1022,10 @@
             
             dino.isDucking = true;
             dinoActionElement.textContent = '蹲下中';
+            
+            if (soundEnabled) {
+                playSound('duck');
+            }
         }
         
         // 停止蹲下
@@ -1106,13 +1043,11 @@
                     gameOver = true;
                     if (soundEnabled) playSound('crash');
                     
-                    // 更新最高分數
                     if (score > bestScore) {
                         bestScore = score;
                         localStorage.setItem('dinoBestScore', bestScore);
                     }
                     
-                    // 顯示遊戲結束畫面
                     showGameOverScreen();
                 }
             });
@@ -1136,7 +1071,6 @@
         function showGameOverScreen() {
             finalScoreElement.textContent = score;
             
-            // 根據分數顯示不同訊息
             let message = "繼續努力！";
             if (score >= 500) message = "太厲害了！你是恐龍大師！";
             else if (score >= 300) message = "做得好！";
@@ -1148,8 +1082,38 @@
         
         // 播放音效
         function playSound(soundType) {
-            // 這裡可以添加實際的音效
-            console.log(`播放音效: ${soundType}`);
+            if (!soundEnabled) return;
+            
+            // 使用增強版音效管理器
+            if (window.enhancedSoundManager) {
+                let soundName = '';
+                let volume = 0.7;
+                
+                switch(soundType) {
+                    case 'jump':
+                        soundName = 'dino_jump';
+                        volume = 0.8;
+                        break;
+                    case 'crash':
+                        soundName = 'dino_crash';
+                        volume = 0.9;
+                        break;
+                    case 'speedup':
+                        soundName = 'dino_speedup';
+                        volume = 0.6;
+                        break;
+                    case 'duck':
+                        soundName = 'dino_duck';
+                        volume = 0.5;
+                        break;
+                    default:
+                        soundName = 'move';
+                        volume = 0.7;
+                }
+                window.enhancedSoundManager.playSound(soundName, volume);
+            } else {
+                console.log(`播放音效: ${soundType}`);
+            }
         }
         
         // 遊戲循環
@@ -1164,7 +1128,6 @@
         
         // 事件監聽器
         function setupEventListeners() {
-            // 鍵盤控制
             document.addEventListener('keydown', (e) => {
                 switch(e.code) {
                     case 'Space':
@@ -1197,7 +1160,6 @@
                 }
             });
             
-            // 按鈕事件
             restartButton.addEventListener('click', () => {
                 initGame();
                 startGame();
@@ -1209,7 +1171,11 @@
             });
             
             soundToggleButton.addEventListener('click', () => {
-                soundEnabled = !soundEnabled;
+                if (window.enhancedSoundManager) {
+                    soundEnabled = window.enhancedSoundManager.toggleSound();
+                } else {
+                    soundEnabled = !soundEnabled;
+                }
                 soundToggleButton.textContent = `音效: ${soundEnabled ? '開' : '關'}`;
             });
             
@@ -1219,7 +1185,6 @@
                 toggleThemeButton.textContent = nightMode ? '日間模式' : '夜間模式';
             });
             
-            // 觸摸控制（移動設備）
             canvas.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 if (!gameStarted) {
@@ -1233,7 +1198,6 @@
                 e.preventDefault();
             });
             
-            // 滑鼠點擊控制
             canvas.addEventListener('click', () => {
                 if (!gameStarted) {
                     startGame();
@@ -1242,47 +1206,47 @@
                 }
             });
             
-            // 視窗大小調整
             window.addEventListener('resize', () => {
-                // 調整畫布大小
                 const containerWidth = canvas.parentElement.clientWidth;
                 canvas.width = containerWidth;
                 canvas.height = 300;
                 
-                // 調整恐龍位置
                 dino.y = canvas.height - GROUND_HEIGHT - dino.height;
                 
-                // 重新繪製
                 draw();
             });
+        }
+        
+        // 初始化音效設定
+        function initSoundSettings() {
+            if (window.enhancedSoundManager) {
+                const settings = window.enhancedSoundManager.getSettings();
+                soundEnabled = settings.enabled;
+                soundToggleButton.textContent = `音效: ${soundEnabled ? '開' : '關'}`;
+            }
         }
         
         // 初始化
         function init() {
             initGame();
             setupEventListeners();
+            initSoundSettings();
             
-            // 調整初始畫布大小
             const containerWidth = canvas.parentElement.clientWidth;
             canvas.width = containerWidth;
             canvas.height = 300;
             
-            // 初始繪製
             draw();
         }
         
-        // 當頁面加載完成時初始化遊戲
         document.addEventListener('DOMContentLoaded', init);
         
-        // 添加一些初始動畫效果
         setTimeout(() => {
             dinoActionElement.textContent = '等待指令...';
         }, 1000);
         
-        // 添加恐龍動畫效果
         setInterval(() => {
             if (!gameStarted && !gameOver) {
-                // 讓恐龍有輕微的上下浮動效果
                 dino.y = canvas.height - GROUND_HEIGHT - dino.normalHeight + Math.sin(Date.now() / 500) * 3;
                 draw();
             }
