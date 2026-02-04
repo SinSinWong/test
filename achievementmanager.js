@@ -1,218 +1,3 @@
-我來幫你實作音效、成就系統和線路排行榜功能。讓我按照之前制定的計劃分階段進行。
-
-🎯 Phase 1: 建立共享架構和音效系統
-首先創建共享的 JavaScript 文件夾結構和音效管理器：
-
-Operation not permitted
-Operation not permitted
-Operation not permitted
-讓我嘗試直接創建文件，如果目錄不存在會自動創建：
-
-/**
- * 音效管理器 - 統一管理所有遊戲的音效
- * 支援音效預載、播放控制、音量調節等功能
- */
-class SoundManager {
-    constructor() {
-        this.sounds = new Map();
-        this.audioContext = null;
-        this.masterVolume = 0.5;
-        this.enabled = true;
-        this.initialized = false;
-        
-        // 音效文件列表
-        this.soundFiles = {
-            move: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE',
-            score: 'data:audio/wav;base64,UklGRhwBAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YfgBAAC4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4',
-            gameOver: 'data:audio/wav;base64,UklGRpYCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YXICAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA',
-            achievement: 'data:audio/wav;base64,UklGRpYCAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YXICAADAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA',
-            levelUp: 'data:audio/wav;base64,UklGRh4CAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YfgCAACBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGB'
-        };
-    }
-    
-    // 初始化音頻上下文
-    async init() {
-        if (this.initialized) return;
-        
-        try {
-            // 創建 Web Audio API 上下文
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            
-            // 預載所有音效
-            await this.loadAllSounds();
-            
-            this.initialized = true;
-            console.log('音效管理器初始化完成');
-        } catch (error) {
-            console.error('音效管理器初始化失敗:', error);
-        }
-    }
-    
-    // 預載所有音效文件
-    async loadAllSounds() {
-        for (const [name, data] of Object.entries(this.soundFiles)) {
-            await this.loadSoundFromData(name, data);
-        }
-    }
-    
-    // 從 Base64 數據加載音效
-    async loadSoundFromData(name, data) {
-        try {
-            // 解碼 Base64 數據
-            const binaryString = atob(data.split(',')[1]);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
-            }
-            
-            // 解碼音頻
-            const audioBuffer = await this.audioContext.decodeAudioData(bytes.buffer);
-            this.sounds.set(name, audioBuffer);
-        } catch (error) {
-            console.error(`無法加載音效 ${name}:`, error);
-        }
-    }
-    
-    // 播放音效
-    playSound(soundName, volume = 1.0) {
-        if (!this.enabled || !this.initialized) return;
-        
-        const soundBuffer = this.sounds.get(soundName);
-        if (!soundBuffer) {
-            console.warn(`音效 ${soundName} 不存在`);
-            return;
-        }
-        
-        try {
-            // 創建音源和增益節點
-            const source = this.audioContext.createBufferSource();
-            const gainNode = this.audioContext.createGain();
-            
-            // 設置音量
-            const finalVolume = volume * this.masterVolume;
-            gainNode.gain.value = Math.max(0, Math.min(1, finalVolume));
-            
-            // 連接節點
-            source.buffer = soundBuffer;
-            source.connect(gainNode);
-            gainNode.connect(this.audioContext.destination);
-            
-            // 播放音效
-            source.start(0);
-            
-            // 視覺反饋 (可選)
-            this.createVisualFeedback(soundName);
-        } catch (error) {
-            console.error(`播放音效 ${soundName} 失敗:`, error);
-        }
-    }
-    
-    // 創建視覺反饋
-    createVisualFeedback(soundName) {
-        // 在遊戲界面上顯示音效反饋
-        const feedbackElement = document.createElement('div');
-        feedbackElement.className = 'sound-feedback';
-        feedbackElement.textContent = '🔊';
-        feedbackElement.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 12px;
-            border-radius: 50%;
-            z-index: 9999;
-            font-size: 14px;
-            animation: soundPulse 0.5s ease-out;
-            pointer-events: none;
-        `;
-        
-        // 添加CSS動畫
-        if (!document.getElementById('sound-feedback-style')) {
-            const style = document.createElement('style');
-            style.id = 'sound-feedback-style';
-            style.textContent = `
-                @keyframes soundPulse {
-                    0% { transform: scale(1); opacity: 1; }
-                    100% { transform: scale(1.5); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
-        }
-        
-        document.body.appendChild(feedbackElement);
-        setTimeout(() => {
-            if (feedbackElement.parentNode) {
-                feedbackElement.parentNode.removeChild(feedbackElement);
-            }
-        }, 500);
-    }
-    
-    // 設置主音量
-    setMasterVolume(volume) {
-        this.masterVolume = Math.max(0, Math.min(1, volume));
-        this.saveSettings();
-    }
-    
-    // 切換音效開關
-    toggleSound() {
-        this.enabled = !this.enabled;
-        this.saveSettings();
-        return this.enabled;
-    }
-    
-    // 保存設定到 localStorage
-    saveSettings() {
-        const settings = {
-            enabled: this.enabled,
-            volume: this.masterVolume
-        };
-        localStorage.setItem('cwttt_sound_settings', JSON.stringify(settings));
-    }
-    
-    // 從 localStorage 載入設定
-    loadSettings() {
-        try {
-            const saved = localStorage.getItem('cwttt_sound_settings');
-            if (saved) {
-                const settings = JSON.parse(saved);
-                this.enabled = settings.enabled !== false;
-                this.masterVolume = settings.volume || 0.5;
-            }
-        } catch (error) {
-            console.error('載入音效設定失敗:', error);
-        }
-    }
-    
-    // 獲取當前設定狀態
-    getSettings() {
-        return {
-            enabled: this.enabled,
-            volume: this.masterVolume,
-            initialized: this.initialized
-        };
-    }
-}
-
-// 創建全局音效管理器實例
-const soundManager = new SoundManager();
-
-// 頁面加載時初始化
-document.addEventListener('DOMContentLoaded', async () => {
-    soundManager.loadSettings();
-    // 延遲初始化，用戶交互後再初始化（避免瀏覽器限制）
-    document.addEventListener('click', async () => {
-        if (!soundManager.initialized) {
-            await soundManager.init();
-        }
-    }, { once: true });
-});
-
-// 導出供其他腳本使用
-if (typeof window !== 'undefined') {
-    window.soundManager = soundManager;
-}
-現在創建成就管理器：
-
 /**
  * 成就管理器 - 管理遊戲成就系統
  * 支援成就檢測、解鎖、進度追蹤等功能
@@ -261,61 +46,61 @@ class AchievementManager {
                 rarity: 'epic'
             },
             
-            // 2048成就
-            game2048_first_128: {
-                id: 'game2048_first_128',
-                name: '數字新手',
-                description: '在2048中達到128',
-                game: '2048',
-                condition: { type: 'tile', value: 128 },
-                icon: '🔢',
+            // Block Blast成就
+            blockblast_first_100: {
+                id: 'blockblast_first_100',
+                name: '方塊新手',
+                description: '在Block Blast中獲得100分',
+                game: 'block_blast',
+                condition: { type: 'score', value: 100 },
+                icon: '🧩',
                 rarity: 'common'
             },
-            game2048_first_512: {
-                id: 'game2048_first_512',
-                name: '數字專家',
-                description: '在2048中達到512',
-                game: '2048',
-                condition: { type: 'tile', value: 512 },
-                icon: '📊',
+            blockblast_combo_master: {
+                id: 'blockblast_combo_master',
+                name: '連鎖大師',
+                description: '在Block Blast中一次消除3行/列',
+                game: 'block_blast',
+                condition: { type: 'combo', value: 3 },
+                icon: '⚡',
                 rarity: 'rare'
             },
-            game2048_winner: {
-                id: 'game2048_winner',
-                name: '2048勝利者',
-                description: '在2048中達到2048',
-                game: '2048',
-                condition: { type: 'tile', value: 2048 },
+            blockblast_high_score: {
+                id: 'blockblast_high_score',
+                name: '方塊專家',
+                description: '在Block Blast中獲得500分',
+                game: 'block_blast',
+                condition: { type: 'score', value: 500 },
                 icon: '🎯',
                 rarity: 'epic'
             },
             
-            // 守護氣球成就
-            balloon_survivor_5min: {
-                id: 'balloon_survivor_5min',
-                name: '生存專家',
-                description: '在守護氣球中存活5分鐘',
-                game: 'balloon',
-                condition: { type: 'survival_time', value: 300 }, // 300秒
-                icon: '⏰',
+            // 恐龍跑酷成就
+            dino_first_100: {
+                id: 'dino_first_100',
+                name: '跑酷新手',
+                description: '在恐龍跑酷中獲得100分',
+                game: 'dino_runner',
+                condition: { type: 'score', value: 100 },
+                icon: '🦖',
                 rarity: 'common'
             },
-            balloon_killer_50: {
-                id: 'balloon_killer_50',
-                name: '神射手',
-                description: '在守護氣球中擊敗50個敵人',
-                game: 'balloon',
-                condition: { type: 'kills', value: 50 },
-                icon: '🎯',
+            dino_survivor: {
+                id: 'dino_survivor',
+                name: '生存專家',
+                description: '在恐龍跑酷中存活30秒',
+                game: 'dino_runner',
+                condition: { type: 'survival_time', value: 30 },
+                icon: '⏰',
                 rarity: 'rare'
             },
-            balloon_defender: {
-                id: 'balloon_defender',
-                name: '氣球守護者',
-                description: '在守護氣球中存活10分鐘',
-                game: 'balloon',
-                condition: { type: 'survival_time', value: 600 },
-                icon: '🛡️',
+            dino_legend: {
+                id: 'dino_legend',
+                name: '跑酷傳奇',
+                description: '在恐龍跑酷中獲得1000分',
+                game: 'dino_runner',
+                condition: { type: 'score', value: 1000 },
+                icon: '🏃‍♂️',
                 rarity: 'epic'
             },
             
@@ -359,8 +144,8 @@ class AchievementManager {
             consecutiveDays: 0,
             gamesByType: {
                 snake: 0,
-                '2048': 0,
-                balloon: 0
+                block_blast: 0,
+                dino_runner: 0
             }
         };
     }
@@ -368,7 +153,7 @@ class AchievementManager {
     // 載入成就數據
     loadAchievementData() {
         try {
-            const saved = localStorage.getItem('cwttt_achievements');
+            const saved = localStorage.getItem('game_achievements');
             if (saved) {
                 const data = JSON.parse(saved);
                 this.unlockedAchievements = new Set(data.unlocked || []);
@@ -388,7 +173,7 @@ class AchievementManager {
                 progress: Array.from(this.progress.entries()),
                 stats: this.stats
             };
-            localStorage.setItem('cwttt_achievements', JSON.stringify(data));
+            localStorage.setItem('game_achievements', JSON.stringify(data));
         } catch (error) {
             console.error('保存成就數據失敗:', error);
         }
@@ -435,14 +220,11 @@ class AchievementManager {
             case 'score':
                 return gameData.score >= condition.value;
                 
-            case 'tile':
-                return gameData.maxTile >= condition.value;
+            case 'combo':
+                return gameData.combo >= condition.value;
                 
             case 'survival_time':
                 return gameData.survivalTime >= condition.value;
-                
-            case 'kills':
-                return gameData.kills >= condition.value;
                 
             case 'total_games':
                 return this.stats.totalGamesPlayed >= condition.value;
@@ -464,8 +246,8 @@ class AchievementManager {
         console.log(`成就解鎖: ${this.achievements[achievementId].name}`);
         
         // 播放成就音效
-        if (window.soundManager) {
-            window.soundManager.playSound('achievement');
+        if (window.enhancedSoundManager) {
+            window.enhancedSoundManager.playSound('achievement');
         }
     }
     
@@ -706,4 +488,5 @@ const achievementManager = new AchievementManager();
 // 導出供其他腳本使用
 if (typeof window !== 'undefined') {
     window.achievementManager = achievementManager;
+    console.log('成就管理器已載入，可用成就:', Object.keys(achievementManager.achievements).length);
 }
